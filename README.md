@@ -105,6 +105,8 @@ Probablemente tengas un Postgres local corriendo.
 - Opción A: Detén tu Postgres local (`sudo service postgresql stop`).
 - Opción B: Cambia el puerto en `docker-compose.yaml` (ej. `5433:5432`).
 
+- Si cambias el puerto en el archivo .yaml, asegurate de regresar al puerto original antes de mandar tus cambios al repositorio.
+
 **"No conecta el backend desde el celular"**
 Asegúrate de que tu celular y tu PC estén en la misma red Wi-Fi y regenera los entornos con `./scripts/creacion_entorno.sh`.
 
