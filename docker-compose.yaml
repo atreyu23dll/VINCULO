@@ -1,0 +1,42 @@
+services:
+  # --- Backend (FastAPI) ---
+  backend:
+    build: ./backend
+    container_name: vinculo_backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app 
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/vinculo_db
+
+  # --- Base de Datos (Postgres) ---
+  db:
+    image: postgres:15-alpine
+    container_name: vinculo_db
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=vinculo_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Frontend (Expo) ---
+  frontend:
+    build: ./appVinculo
+    container_name: vinculo_frontend
+    ports:
+      - "8081:8081" # Metro Bundler
+    volumes:
+      - ./appVinculo:/app
+      - /app/node_modules # Truco para usar los módulos de adentro del contenedor
+    environment:
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+
+volumes:
+  postgres_data:
