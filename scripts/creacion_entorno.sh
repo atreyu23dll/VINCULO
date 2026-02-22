@@ -19,16 +19,11 @@ MY_IP=""
 # Si es WSL, necesitamos pedirle la IP a Windows, no a Linux.
 if grep -qi "microsoft" /proc/version; then
     echo "🪟 Detectado entorno WSL (Windows Subsystem for Linux)."
-    echo "   ⏳ Consultando IP de Windows vía PowerShell (esto puede tardar unos segundos)..."
+    echo "   ⏳ Consultando IP de Windows vía PowerShell..."
     
-    # Intento 1: Buscar interfaz Wi-Fi en Windows
-    # El 'tr -d \r' borra el retorno de carro de Windows que rompe los .env
-    MY_IP=$(powershell.exe -Command "(Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias 'Wi-Fi').IPAddress" 2>/dev/null | tr -d '\r')
-    
-    # Intento 2: Si no hay Wi-Fi, buscar Ethernet
-    if [ -z "$MY_IP" ]; then
-         MY_IP=$(powershell.exe -Command "(Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias 'Ethernet').IPAddress" 2>/dev/null | tr -d '\r')
-    fi
+    # Intentamos obtener la IP de la interfaz activa que NO sea virtual (vEthernet)
+    # y que tenga una dirección IPv4 válida.
+    MY_IP=$(powershell.exe -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.InterfaceAlias -notlike '*vEthernet*' -and \$_.InterfaceAlias -notlike '*Loopback*' -and \$_.IPv4Address -ne '127.0.0.1' } | Select-Object -ExpandProperty IPAddress" 2>/dev/null | head -n 1 | tr -d '\r')
 fi
 
 # 3. DETECCIÓN ESTÁNDAR (LINUX / MAC)
@@ -64,6 +59,11 @@ echo "# Auto-generado por script/generar_env.sh" > "$BACK_ENV"
 echo "DATABASE_URL=postgresql://user:password@db:5432/vinculo_db" >> "$BACK_ENV"
 echo "SECRET_KEY=admin1234" >> "$BACK_ENV"
 echo "DEBUG=True" >> "$BACK_ENV"
+
+# 6. CONFIGURAR DOCKER-COMPOSE (Raíz)
+ROOT_ENV="$PROJECT_ROOT/.env"
+echo "📝 Generando configuración Docker en: .env"
+echo "MY_IP=$MY_IP" > "$ROOT_ENV"
 
 echo "----------------------------------------"
 echo "✅ ¡TODO LISTO!"
