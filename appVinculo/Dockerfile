@@ -24,5 +24,5 @@ COPY . .
 # Exponemos el puerto
 EXPOSE 8081
 
-# Iniciamos con túnel
-CMD ["npx", "expo", "start", "--tunnel"]
+# Iniciamos en modo LAN (más estable para Docker local)
+CMD ["npx", "expo", "start", "--lan"]
