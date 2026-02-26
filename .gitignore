@@ -72,4 +72,4 @@ web-build/
 docker-compose.override.yml
 
 # Logs del sistema
-*.log
+*.logvscode.deb
