@@ -1,0 +1,11 @@
+from pydantic import BaseModel, EmailStr
+from uuid import UUID
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginResponse(BaseModel):
+    mensaje: str
+    usuario_id: UUID
+    email: str

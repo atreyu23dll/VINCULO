@@ -67,4 +67,4 @@ echo "MY_IP=$MY_IP" > "$ROOT_ENV"
 
 echo "----------------------------------------"
 echo "✅ ¡TODO LISTO!"
-echo "   Ejecuta: docker compose up --build"
+echo "   Ejecuta: docker-compose up --build"
