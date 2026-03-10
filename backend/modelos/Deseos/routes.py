@@ -15,6 +15,10 @@ def create_deseo(deseo: dto.DeseoCreate, db: Session = Depends(get_db)):
 def read_deseos_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
     return service.get_deseos_by_usuario(db, usuario_id=usuario_id)
 
+@router.get("/usuario/{usuario_id}/historial", response_model=List[dto.DeseoResponse])
+def read_deseos_historial(usuario_id: UUID, db: Session = Depends(get_db)):
+    return service.get_deseos_historial(db, usuario_id=usuario_id)
+
 @router.get("/{deseo_id}", response_model=dto.DeseoResponse)
 def read_deseo(deseo_id: UUID, db: Session = Depends(get_db)):
     db_deseo = service.get_deseo(db, deseo_id=deseo_id)
@@ -25,6 +29,13 @@ def read_deseo(deseo_id: UUID, db: Session = Depends(get_db)):
 @router.patch("/{deseo_id}", response_model=dto.DeseoResponse)
 def update_deseo(deseo_id: UUID, deseo_update: dto.DeseoUpdate, db: Session = Depends(get_db)):
     db_deseo = service.update_deseo(db, deseo_id=deseo_id, deseo_update=deseo_update)
+    if db_deseo is None:
+        raise HTTPException(status_code=404, detail="Deseo not found")
+    return db_deseo
+
+@router.patch("/{deseo_id}/complete", response_model=dto.DeseoResponse)
+def complete_deseo(deseo_id: UUID, req: dto.DeseoCompleteRequest, db: Session = Depends(get_db)):
+    db_deseo = service.marcar_deseo_completado(db, deseo_id=deseo_id, complete_req=req)
     if db_deseo is None:
         raise HTTPException(status_code=404, detail="Deseo not found")
     return db_deseo

@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, DateTime, Integer, Text, ForeignKey, UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
+from geoalchemy2 import Geometry
 from database import Base
 
 class Deseo(Base):
@@ -11,8 +12,12 @@ class Deseo(Base):
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
     texto_original = Column(Text, nullable=False)
     tag_osm = Column(String(100), nullable=True)
-    estado = Column(String(50), default="pendiente") # 'pendiente', 'buscando', 'cumplido', 'cancelado'
+    estado = Column(String(50), default="pendiente") # 'pendiente', 'buscando', 'cumplido', 'cancelado', 'COMPLETADO'
     radio_busqueda_metros = Column(Integer, default=5000)
+    
+    fecha_completado = Column(DateTime, nullable=True)
+    ubicacion_completado = Column(Geometry(geometry_type='POINT', srid=4326), nullable=True)
+    
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

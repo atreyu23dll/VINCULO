@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 class DeseoBase(BaseModel):
     texto_original: str
@@ -17,10 +17,16 @@ class DeseoUpdate(BaseModel):
     estado: Optional[str] = None
     radio_busqueda_metros: Optional[int] = None
 
+class DeseoCompleteRequest(BaseModel):
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+
 class DeseoResponse(DeseoBase):
     id: UUID
     usuario_id: UUID
     estado: str
+    fecha_completado: Optional[datetime] = None
+    ubicacion_completado: Optional[Any] = None
     created_at: datetime
     updated_at: datetime
 
