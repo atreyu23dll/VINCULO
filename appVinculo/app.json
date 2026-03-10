@@ -38,6 +38,12 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permite a Vínculo usar tu ubicación en segundo plano para encontrar lugares donde cumplir tus deseos."
+        }
       ]
     ],
     "experiments": {

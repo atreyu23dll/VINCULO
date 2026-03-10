@@ -13,8 +13,6 @@ COPY package.json package-lock.json ./
 # Instalamos dependencias
 RUN npm install --legacy-peer-deps
 
-# Instalamos globalmente expo-cli
-RUN npm install -g expo-cli
 
 RUN npm install -g @expo/ngrok
 

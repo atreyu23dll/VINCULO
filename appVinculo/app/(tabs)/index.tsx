@@ -1,11 +1,36 @@
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { startRadarService, stopRadarService } from '../../services/locationService';
+import * as TaskManager from 'expo-task-manager';
 
 export default function HomeScreen() {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastCheck, setLastCheck] = useState<string | null>(null);
+  const [radarActive, setRadarActive] = useState(false);
+
+  useEffect(() => {
+    // Check initial radar status
+    const checkRadarStatus = async () => {
+      const isRegistered = await TaskManager.isTaskRegisteredAsync('background-radar-task');
+      setRadarActive(isRegistered);
+    };
+    checkRadarStatus();
+  }, []);
+
+  const toggleRadar = async () => {
+    if (radarActive) {
+      await stopRadarService();
+      setRadarActive(false);
+    } else {
+      const started = await startRadarService();
+      if (started) {
+        setRadarActive(true);
+        Alert.alert("Radar Activado", "La aplicación verificará coincidencias de tus deseos en segundo plano cada 5 minutos.");
+      }
+    }
+  };
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -68,7 +93,17 @@ export default function HomeScreen() {
           </Text>
         )}
 
-        <Text className="text-slate-600 text-xs text-center mt-8">
+        {/* RADAR DE DESEOS BUTTON */}
+        <TouchableOpacity
+          onPress={toggleRadar}
+          className={`mt-6 py-4 px-6 rounded-xl flex-row justify-center items-center ${radarActive ? 'bg-red-500/80' : 'bg-green-600'}`}
+        >
+          <Text className="text-white font-bold text-lg">
+            {radarActive ? '⏹️ Detener Radar' : '📡 Activar Radar de Deseos'}
+          </Text>
+        </TouchableOpacity>
+
+        <Text className="text-slate-600 text-xs text-center mt-6">
           Backend: {API_URL}
         </Text>
       </View>
