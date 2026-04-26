@@ -8,10 +8,19 @@
     "scheme": "appvinculo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#facc15",
+      "iosDisplayInForeground": true,
+      "androidMode": "collapse",
+      "androidAccentColor": "#facc15"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.josmar.vinculo",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -27,6 +36,14 @@
     },
     "plugins": [
       "expo-router",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationAlwaysPermission": "Vínculo necesita acceder a tu ubicación en segundo plano para avisarte cuando estés cerca de lo que buscas.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -38,11 +55,19 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "088d6c7b-8322-41e2-bf73-f0502b2bbb6f"
+      }
     }
   }
 }

@@ -1,41 +1,56 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from uuid import UUID
-from database import get_db
-from . import service, dto
+from database import SessionLocal
+from modelos.Usuarios.modelo import Usuario
+from auth import get_current_user
+from pydantic import BaseModel
+import uuid
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
-@router.post("/", response_model=dto.UsuarioResponse)
-def create_usuario(usuario: dto.UsuarioCreate, db: Session = Depends(get_db)):
-    db_usuario = service.get_usuario_by_email(db, email=usuario.email)
-    if db_usuario:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return service.create_usuario(db=db, usuario=usuario)
+class PushTokenSchema(BaseModel):
+    push_token: str
 
-@router.get("/", response_model=List[dto.UsuarioResponse])
-def read_usuarios(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    usuarios = service.get_usuarios(db, skip=skip, limit=limit)
-    return usuarios
+class UbicacionSchema(BaseModel):
+    latitud: float
+    longitud: float
 
-@router.get("/{usuario_id}", response_model=dto.UsuarioResponse)
-def read_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    db_usuario = service.get_usuario(db, usuario_id=usuario_id)
-    if db_usuario is None:
-        raise HTTPException(status_code=404, detail="Usuario not found")
-    return db_usuario
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@router.patch("/{usuario_id}", response_model=dto.UsuarioResponse)
-def update_usuario(usuario_id: UUID, usuario_update: dto.UsuarioUpdate, db: Session = Depends(get_db)):
-    db_usuario = service.update_usuario(db, usuario_id=usuario_id, usuario_update=usuario_update)
-    if db_usuario is None:
-        raise HTTPException(status_code=404, detail="Usuario not found")
-    return db_usuario
+@router.post("/me/push-token")
+async def actualizar_push_token(
+    payload: PushTokenSchema,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    user.push_token = payload.push_token
+    db.commit()
+    print(f"✅ Push Token guardado para usuario {user.email}")
+    return {"status": "ok"}
 
-@router.delete("/{usuario_id}")
-def delete_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    success = service.delete_usuario(db, usuario_id=usuario_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Usuario not found")
-    return {"detail": "Usuario deleted"}
+@router.post("/me/ubicacion")
+async def actualizar_ubicacion(
+    payload: UbicacionSchema,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = uuid.UUID(current_user["sub"])
+    user = db.query(Usuario).filter(Usuario.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    user.ultima_latitud = payload.latitud
+    user.ultima_longitud = payload.longitud
+    db.commit()
+    print(f"📍 Ubicación actualizada para {user.email}: {payload.latitud}, {payload.longitud}")
+    return {"status": "ok"}

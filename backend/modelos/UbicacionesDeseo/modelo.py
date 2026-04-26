@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, BigInteger, UUID
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
+from geoalchemy2.shape import to_shape
 from sqlalchemy.sql import func
 import uuid
 from database import Base
@@ -20,3 +21,18 @@ class UbicacionDeseo(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     deseo = relationship("Deseo", back_populates="ubicaciones")
+
+    # Propiedades para Pydantic
+    @property
+    def lat(self):
+        if self.ubicacion is not None:
+            point = to_shape(self.ubicacion)
+            return point.y
+        return None
+
+    @property
+    def lon(self):
+        if self.ubicacion is not None:
+            point = to_shape(self.ubicacion)
+            return point.x
+        return None

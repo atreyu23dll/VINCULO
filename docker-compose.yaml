@@ -3,15 +3,55 @@ services:
   backend:
     build: ./backend
     container_name: vinculo_backend
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "python init_db.py && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./backend:/app
+      - ./scripts:/app/scripts
     ports:
       - "8000:8000"
     depends_on:
       - db
+      - redis
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/vinculo_db
+      - REDIS_URL=redis://redis:6379/0
+
+  # --- Celery Worker ---
+  worker:
+    build: ./backend
+    container_name: vinculo_worker
+    # Apuntamos explícitamente a celery_app
+    command: celery -A tasks:celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/vinculo_db
+      - REDIS_URL=redis://redis:6379/0
+
+  # --- Celery Beat (Programador) ---
+  beat:
+    build: ./backend
+    container_name: vinculo_beat
+    command: celery -A tasks:celery_app beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+      - worker
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/vinculo_db
+      - REDIS_URL=redis://redis:6379/0
+
+  # --- Redis (Broker) ---
+  redis:
+    image: redis:7-alpine
+    container_name: vinculo_redis
+    ports:
+      - "6379:6379"
 
   # --- Base de Datos (Postgres) ---
   db:
@@ -26,17 +66,50 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # --- Keycloak Database ---
+  keycloak_db:
+    image: postgres:15
+    container_name: keycloak_db
+    environment:
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=keycloak
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+
+  # --- Keycloak ---
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.2
+    container_name: vinculo_keycloak
+    command: start-dev --hostname-strict=false --hostname-strict-https=false --http-enabled=true
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak_db:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=password
+      - KC_HOSTNAME=${MY_IP}
+      - KC_HTTP_RELATIVE_PATH=/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak_db
+
   # --- Frontend (Expo) ---
   frontend:
     build: ./appVinculo
     container_name: vinculo_frontend
-    ports:
-      - "8081:8081" # Metro Bundler
+    network_mode: host
     volumes:
       - ./appVinculo:/app
-      - /app/node_modules # Truco para usar los módulos de adentro del contenedor
     environment:
-      - REACT_NATIVE_PACKAGER_HOSTNAME=${MY_IP:-localhost}
+      - EXPO_PUBLIC_API_URL=http://${MY_IP}:8000
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${MY_IP}
+      - EXPO_PACKAGER_HOSTNAME=${MY_IP}
+      - EXPO_LAN_ADDRESS=${MY_IP}
+    command: npx expo start --lan -c
 
 volumes:
   postgres_data:
+  keycloak_data:
