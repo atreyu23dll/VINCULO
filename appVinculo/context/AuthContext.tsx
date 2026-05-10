@@ -11,6 +11,7 @@ interface AuthContextType {
     token: string | null;
     login: () => Promise<void>;
     loginNativo: (username: string, pass: string) => Promise<{success: boolean, error?: string}>;
+    register: (email: string, pass: string, nombre: string) => Promise<{success: boolean, error?: string}>;
     logout: () => Promise<void>;
     isLoading: boolean;
 }
@@ -150,8 +151,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
     };
 
+    const register = async (email: string, pass: string, nombre: string): Promise<{success: boolean, error?: string}> => {
+        setIsLoading(true);
+        try {
+            const api_url = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await fetch(`${api_url}/usuarios/registro`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password: pass, nombre })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                return { success: true };
+            } else {
+                return { success: false, error: data.detail || "Error en el registro" };
+            }
+        } catch (e) {
+            return { success: false, error: "Error de red" };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, loginNativo, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, token, login, loginNativo, register, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

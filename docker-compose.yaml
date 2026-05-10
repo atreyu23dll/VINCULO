@@ -91,8 +91,11 @@ services:
       - KC_DB_PASSWORD=password
       - KC_HOSTNAME=${MY_IP}
       - KC_HTTP_RELATIVE_PATH=/
+      - KC_THEME=vinculo
     ports:
       - "8080:8080"
+    volumes:
+      - ./keycloak/themes:/opt/keycloak/themes
     depends_on:
       - keycloak_db
 

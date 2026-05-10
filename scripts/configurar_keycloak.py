@@ -45,10 +45,19 @@ def configurar_keycloak():
     # 2. Asegurar Realm Vinculo
     try:
         if not any(r['realm'] == REALM_NAME for r in master_adm.get_realms()):
-            master_adm.create_realm(payload={"realm": REALM_NAME, "enabled": True})
-            print(f"✅ Realm '{REALM_NAME}' creado.")
+            master_adm.create_realm(payload={
+                "realm": REALM_NAME, 
+                "enabled": True,
+                "registrationAllowed": True,
+                "loginTheme": "vinculo"
+            })
+            print(f"✅ Realm '{REALM_NAME}' creado con registro habilitado y tema 'vinculo'.")
         else:
-            print(f"ℹ️ Realm '{REALM_NAME}' ya existe.")
+            master_adm.update_realm(realm=REALM_NAME, payload={
+                "registrationAllowed": True,
+                "loginTheme": "vinculo"
+            })
+            print(f"ℹ️ Realm '{REALM_NAME}' actualizado (Registro ON, Tema 'vinculo').")
     except Exception as e:
         print(f"❌ Error creando realm: {e}")
 

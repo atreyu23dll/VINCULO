@@ -1,36 +1,46 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Stack, useRouter, Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function LoginScreen() {
-    const { login, loginNativo, token, isLoading } = useAuth();
+export default function RegisterScreen() {
+    const { register, isLoading } = useAuth();
     const router = useRouter();
 
-    const [username, setUsername] = useState('');
+    const [nombre, setNombre] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
-    React.useEffect(() => {
-        if (token) {
-            router.replace('/(tabs)');
-        }
-    }, [token]);
-
-    const handleNativeLogin = async () => {
-        if (!username || !password) {
-            Alert.alert("Campos requeridos", "Por favor ingresa usuario y contraseña");
+    const handleRegister = async () => {
+        if (!email || !password || !nombre) {
+            Alert.alert("Campos requeridos", "Por favor completa todos los campos");
             return;
         }
 
-        const result = await loginNativo(username, password);
-        if (!result.success) {
-            Alert.alert("Error de acceso", result.error || "Credenciales inválidas");
+        if (password !== confirmPassword) {
+            Alert.alert("Error", "Las contraseñas no coinciden");
+            return;
+        }
+
+        const result = await register(email, password, nombre);
+        if (result.success) {
+            Alert.alert(
+                "¡Éxito!", 
+                "Usuario registrado correctamente. Ahora puedes iniciar sesión.",
+                [{ text: "OK", onPress: () => router.push('/login') }]
+            );
+        } else {
+            Alert.alert("Error de registro", result.error || "No se pudo crear la cuenta");
         }
     };
 
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
             <Stack.Screen options={{ headerShown: false }} />
 
             <LinearGradient
@@ -38,23 +48,34 @@ export default function LoginScreen() {
                 style={styles.background}
             />
 
-            <View style={styles.content}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.logoContainer}>
                     <Text style={styles.title}>VÍNCULO</Text>
-                    <Text style={styles.subtitle}>CONECTANDO DESEOS</Text>
+                    <Text style={styles.subtitle}>CREAR CUENTA</Text>
                 </View>
 
                 <View style={styles.formCard}>
-                    <Text style={styles.formTitle}>Bienvenido</Text>
+                    <Text style={styles.formTitle}>Registro</Text>
                     
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>NOMBRE COMPLETO</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Juan Pérez"
+                            placeholderTextColor="#475569"
+                            value={nombre}
+                            onChangeText={setNombre}
+                        />
+                    </View>
+
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>EMAIL</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="tu@email.com"
+                            placeholder="email@ejemplo.com"
                             placeholderTextColor="#475569"
-                            value={username}
-                            onChangeText={setUsername}
+                            value={email}
+                            onChangeText={setEmail}
                             autoCapitalize="none"
                             keyboardType="email-address"
                         />
@@ -72,46 +93,41 @@ export default function LoginScreen() {
                         />
                     </View>
 
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>CONFIRMAR CONTRASEÑA</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="••••••••"
+                            placeholderTextColor="#475569"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry
+                        />
+                    </View>
+
                     <TouchableOpacity
                         style={styles.mainButton}
-                        onPress={handleNativeLogin}
+                        onPress={handleRegister}
                         disabled={isLoading}
                     >
                         {isLoading ? (
                             <ActivityIndicator color="#0f172a" />
                         ) : (
-                            <Text style={styles.mainButtonText}>ACCEDER</Text>
+                            <Text style={styles.mainButtonText}>REGISTRARSE</Text>
                         )}
                     </TouchableOpacity>
 
-                    <View style={styles.divider}>
-                        <View style={styles.line} />
-                        <Text style={styles.dividerText}>O TAMBIÉN</Text>
-                        <View style={styles.line} />
-                    </View>
-
-                    <TouchableOpacity
-                        style={styles.secondaryButton}
-                        onPress={() => login()}
-                    >
-                        <Text style={styles.secondaryButtonText}>Login con Keycloak</Text>
-                    </TouchableOpacity>
-
-                    <View style={styles.registerContainer}>
-                        <Text style={styles.registerText}>¿No tienes cuenta?</Text>
-                        <Link href="/register" asChild>
+                    <View style={styles.footerContainer}>
+                        <Text style={styles.footerText}>¿Ya tienes cuenta?</Text>
+                        <Link href="/login" asChild>
                             <TouchableOpacity>
-                                <Text style={styles.registerLink}> Regístrate</Text>
+                                <Text style={styles.linkText}> Inicia sesión</Text>
                             </TouchableOpacity>
                         </Link>
                     </View>
                 </View>
-
-                <Text style={styles.footer}>
-                    {process.env.EXPO_PUBLIC_API_URL || 'Dev Mode'}
-                </Text>
-            </View>
-        </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -126,14 +142,15 @@ const styles = StyleSheet.create({
         top: 0,
         height: '100%',
     },
-    content: {
-        flex: 1,
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         paddingHorizontal: 30,
+        paddingVertical: 50,
     },
     logoContainer: {
         alignItems: 'center',
-        marginBottom: 50,
+        marginBottom: 40,
     },
     title: {
         fontSize: 42,
@@ -205,51 +222,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         letterSpacing: 1
     },
-    divider: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 25,
-    },
-    line: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#334155',
-    },
-    dividerText: {
-        color: '#475569',
-        marginHorizontal: 15,
-        fontSize: 10,
-        fontWeight: 'bold'
-    },
-    secondaryButton: {
-        paddingVertical: 10,
-        alignItems: 'center',
-    },
-    secondaryButtonText: {
-        color: '#94a3b8',
-        fontSize: 14,
-        textDecorationLine: 'underline'
-    },
-    footer: {
-        textAlign: 'center',
-        marginTop: 30,
-        color: '#334155',
-        fontSize: 10,
-        fontFamily: 'monospace'
-    },
-    registerContainer: {
+    footerContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#334155',
-        paddingTop: 20
+        marginTop: 25,
     },
-    registerText: {
+    footerText: {
         color: '#94a3b8',
         fontSize: 14,
     },
-    registerLink: {
+    linkText: {
         color: '#facc15',
         fontSize: 14,
         fontWeight: 'bold',
