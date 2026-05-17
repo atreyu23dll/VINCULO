@@ -77,7 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const res = await fetch(AUTH_CONFIG.discovery.tokenEndpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'ngrok-skip-browser-warning': '69420'
                 },
                 body: formBody
             });
@@ -90,7 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setRefreshToken(data.refresh_token);
                 
                 const userResponse = await fetch(AUTH_CONFIG.discovery.userInfoEndpoint, {
-                    headers: { Authorization: `Bearer ${data.access_token}` }
+                    headers: { 
+                        Authorization: `Bearer ${data.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
                 });
                 const userData = await userResponse.json();
                 await SecureStore.setItemAsync('userData', JSON.stringify(userData));
@@ -101,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return { success: false, error: errorMsg };
             }
         } catch (e: any) {
-            return { success: false, error: "Error de red o servidor no disponible" };
+            return { success: false, error: `Error de red: ${e.message}. URL intentada: ${AUTH_CONFIG.discovery.tokenEndpoint}` };
         } finally {
             setIsLoading(false);
         }
@@ -154,11 +158,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (email: string, pass: string, nombre: string): Promise<{success: boolean, error?: string}> => {
         setIsLoading(true);
         try {
-            const api_url = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+            const api_url = 'https://vinculo-1u39.onrender.com';
             const res = await fetch(`${api_url}/usuarios/registro`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': '69420'
                 },
                 body: JSON.stringify({ email, password: pass, nombre })
             });
@@ -169,8 +174,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
                 return { success: false, error: data.detail || "Error en el registro" };
             }
-        } catch (e) {
-            return { success: false, error: "Error de red" };
+        } catch (e: any) {
+            const api_url = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+            return { success: false, error: `Error de red: ${e.message}. URL: ${api_url}/usuarios/registro` };
         } finally {
             setIsLoading(false);
         }

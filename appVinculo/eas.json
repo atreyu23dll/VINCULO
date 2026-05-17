@@ -8,15 +8,28 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://vinculo-1u39.onrender.com",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://docosanoic-lightly-silva.ngrok-free.dev"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://vinculo-1u39.onrender.com",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://docosanoic-lightly-silva.ngrok-free.dev"
       }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://vinculo-1u39.onrender.com",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://docosanoic-lightly-silva.ngrok-free.dev"
+      }
+    }
   },
   "submit": {
     "production": {}

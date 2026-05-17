@@ -1,13 +1,12 @@
 import Constants from 'expo-constants';
 
 // Extraemos la IP de la variable de entorno o usamos localhost por defecto
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
-const MY_IP = API_URL.split('://')[1].split(':')[0];
+const API_URL = 'https://vinculo-1u39.onrender.com';
 
 export const KEYCLOAK_CONFIG = {
     realm: 'Vinculo',
     clientId: 'vinculo-app',
-    url: `http://${MY_IP}:8080`, // Dinámico basado en la IP detectada
+    url: 'https://docosanoic-lightly-silva.ngrok-free.dev', 
 };
 
 export const AUTH_CONFIG = {

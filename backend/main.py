@@ -8,8 +8,16 @@ from modelos.Notificaciones.routes import router as notificaciones_router
 from modelos.Notificaciones.modelo import Notificacion
 from modelos.Coordenadas.modelo import Coordenada
 from auth import get_current_user
+from init_db import init_db
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Vinculo API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Esto se ejecutará cada vez que el servidor arranque
+    init_db()
+    yield
+
+app = FastAPI(title="Vinculo API", lifespan=lifespan)
 
 # Configuración de CORS
 app.add_middleware(
